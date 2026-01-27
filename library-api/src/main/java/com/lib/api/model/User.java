@@ -30,7 +30,7 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
-    @Column(name = "is_blacklisted")
+    @Column(name = "is_blacklisted", nullable = false)
     private Boolean isBlacklisted = false;
 
     @Column(name = "created_at")
