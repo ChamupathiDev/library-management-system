@@ -1,5 +1,7 @@
 package com.lib.api.controller;
 
+import com.lib.api.dto.AuthResponse;
+import com.lib.api.dto.LoginRequest;
 import com.lib.api.dto.RegisterRequest;
 import com.lib.api.dto.UserResponse;
 import com.lib.api.service.AuthService;
@@ -23,5 +25,10 @@ public class AuthController {
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
         UserResponse response = authService.registerUser(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
+        return ResponseEntity.ok(authService.login(request));
     }
 }
