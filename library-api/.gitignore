@@ -6,8 +6,7 @@ target/
 
 ### Spring Boot Config ###
 # Exclude sensitive database and server credentials
-src/main/resources/application*.yml
-src/main/resources/application*.yaml
+src/main/resources/application-secrets.yaml
 
 ### STS ###
 .apt_generated
