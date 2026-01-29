@@ -52,7 +52,7 @@ public class AuthService {
         }
 
         // 3. Generate Token
-        String token = jwtService.generateToken(user.getEmail());
+        String token = jwtService.generateToken(user);
 
         return new AuthResponse(token, user.getEmail(), user.getRole().name());
     }
