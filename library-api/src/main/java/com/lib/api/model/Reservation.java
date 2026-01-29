@@ -1,17 +1,13 @@
 package com.lib.api.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "reservations")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Reservation {
@@ -37,4 +33,15 @@ public class Reservation {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ReservationStatus status = ReservationStatus.ACTIVE; // [cite: 190]
+
+    @PrePersist
+    protected void onReservation() {
+        if (this.reservationDate == null) {
+            this.reservationDate = LocalDate.now();
+        }
+        // Default due date to 14 days if not specified
+        if (this.dueDate == null) {
+            this.dueDate = LocalDate.now().plusDays(14);
+        }
+    }
 }
