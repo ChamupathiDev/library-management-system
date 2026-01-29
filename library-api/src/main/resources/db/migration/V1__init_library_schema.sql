@@ -22,7 +22,7 @@ CREATE TABLE books (
     author VARCHAR(255) NOT NULL,
     genre VARCHAR(100),
     language VARCHAR(50),
-    isbn VARCHAR(13) UNIQUE,
+    isbn VARCHAR(50) UNIQUE,
     status ENUM('AVAILABLE', 'RESERVED') NOT NULL DEFAULT 'AVAILABLE',
     image_url VARCHAR(512),
     category_id INT,

@@ -1,15 +1,11 @@
 package com.lib.api.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Table(name = "books")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Book {
@@ -40,4 +36,12 @@ public class Book {
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
+
+    // --- ADD THIS METHOD HERE ---
+    @PrePersist
+    protected void onCreate() {
+        if (this.status == null) {
+            this.status = BookStatus.AVAILABLE;
+        }
+    }
 }
