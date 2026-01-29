@@ -4,7 +4,6 @@ import com.lib.api.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -18,7 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity // This is the "Engine" that makes @PreAuthorize work in Controllers
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -39,18 +38,13 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        // 1. Allow everyone to access Auth (Login/Signup)
                         .requestMatchers("/api/auth/**").permitAll()
-                        // 1. Only LIBRARIANS can Create, Update, or Delete books/categories
-                        .requestMatchers(HttpMethod.POST, "/api/books/**", "/api/categories/**").hasRole("LIBRARIAN")
-                        .requestMatchers(HttpMethod.PUT, "/api/books/**", "/api/categories/**").hasRole("LIBRARIAN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/books/**", "/api/categories/**").hasRole("LIBRARIAN")
-                        // 2. Regular USERS and LIBRARIANS can View (GET) books
-                        .requestMatchers(HttpMethod.GET, "/api/books/**", "/api/categories/**").hasAnyRole("USER", "LIBRARIAN")
-                        // 3. Admin routes
-                        .requestMatchers("/api/admin/**").hasRole("LIBRARIAN")
+
+                        // 2. All other requests (/api/books, /api/users, etc.) require a valid Token
+                        // The specific ROLE checks are now handled inside the Controllers
                         .anyRequest().authenticated()
                 )
-                // Added for industry standard Stateless architecture
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
