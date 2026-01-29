@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -20,8 +21,11 @@ public class ReservationController {
 
     // Anyone authenticated can reserve
     @PostMapping
-    public ResponseEntity<ReservationResponse> reserveBook(@RequestBody ReservationRequest request) {
-        return ResponseEntity.ok(reservationService.createReservation(request));
+    public ResponseEntity<ReservationResponse> reserveBook(
+            @RequestBody ReservationRequest request,
+            Principal principal) {
+        // principal.getName() returns the email stored in the JWT [cite: 43]
+        return ResponseEntity.ok(reservationService.createReservation(request, principal.getName()));
     }
 
     // Anyone authenticated can return
@@ -43,5 +47,10 @@ public class ReservationController {
     public ResponseEntity<Void> deleteReservation(@PathVariable Integer id) {
         reservationService.deleteReservation(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<ReservationResponse>> getMyReservations(Principal principal) {
+        return ResponseEntity.ok(reservationService.getMyReservations(principal.getName()));
     }
 }

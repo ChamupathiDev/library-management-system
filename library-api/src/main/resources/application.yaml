@@ -1,0 +1,42 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: library-api
+  profiles:
+    include: secrets
+  mail:
+    host: "sandbox.smtp.mailtrap.io"
+    port: 2525
+    username: ${mail.username}
+    password: ${mail.password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          ssl:
+            enable: false
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB        # Max size for a single file
+      max-request-size: 5MB     # Max size for the entire request
+
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/library_db?createDatabaseIfNotExist=true
+    username: root        # Change this to your MySQL username
+    password: root    # Change this to your MySQL password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Flyway manages the schema, so JPA just checks it
+      show-sql: true        # This lets you see the queries in the console
+
+
+
+

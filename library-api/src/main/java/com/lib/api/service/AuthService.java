@@ -12,15 +12,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService; // New injection
+    private final JwtService jwtService;
+    private final EmailService emailService; // 1. ADD THIS INJECTION
 
     public UserResponse registerUser(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
@@ -34,6 +33,10 @@ public class AuthService {
 
         User savedUser = userRepository.save(user);
 
+        // 2. TRIGGER THE EMAIL
+        // Since we used @Async in the EmailService, this won't slow down the signup!
+        emailService.sendWelcomeEmail(savedUser.getEmail());
+
         UserResponse response = new UserResponse();
         response.setId(savedUser.getId());
         response.setEmail(savedUser.getEmail());
@@ -42,16 +45,13 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
-        // 1. Find user
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Invalid email or password"));
 
-        // 2. Check password
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid email or password");
         }
 
-        // 3. Generate Token
         String token = jwtService.generateToken(user);
 
         return new AuthResponse(token, user.getEmail(), user.getRole().name());

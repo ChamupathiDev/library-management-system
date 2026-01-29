@@ -2,9 +2,12 @@ package com.lib.api.controller;
 
 import com.lib.api.model.Book;
 import com.lib.api.service.BookService;
+import com.lib.api.service.FileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -13,6 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BookController {
     private final BookService bookService;
+    private final FileService fileService;
 
     @GetMapping
     public List<Book> getAllBooks() {
@@ -44,5 +48,16 @@ public class BookController {
     public ResponseEntity<Void> deleteBook(@PathVariable Integer id) {
         bookService.deleteBook(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/upload-image")
+    @PreAuthorize("hasRole('LIBRARIAN')") // Restricts access to Librarian role [cite: 45]
+    public ResponseEntity<Book> uploadImage(
+            @PathVariable Integer id,
+            @RequestParam("file") MultipartFile file) {
+
+        String fileName = fileService.saveFile(file);
+        Book updatedBook = bookService.updateBookImage(id, fileName);
+        return ResponseEntity.ok(updatedBook);
     }
 }

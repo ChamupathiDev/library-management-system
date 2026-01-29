@@ -67,28 +67,32 @@ public class ReservationService {
      * User Task: Create a new reservation.
      */
     @Transactional
-    public ReservationResponse createReservation(ReservationRequest request) {
+    public ReservationResponse createReservation(ReservationRequest request, String currentUserEmail) {
+        // 1. Find the book [cite: 188]
         Book book = bookRepository.findById(request.getBookId())
                 .orElseThrow(() -> new RuntimeException("Book not found"));
-        User user = userRepository.findById(request.getUserId())
+
+        // 2. Find the user safely by the email from the Token [cite: 183, 127]
+        User user = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (book.getStatus() != BookStatus.AVAILABLE) {
-            throw new RuntimeException("Book is not available");
+            throw new RuntimeException("Book is already reserved");
         }
 
+        // 3. Create reservation logic [cite: 190]
         Reservation reservation = new Reservation();
         reservation.setBook(book);
         reservation.setUser(user);
-        reservation.setReservationDate(LocalDate.now());
-        reservation.setDueDate(LocalDate.now().plusDays(request.getDays()));
-        reservation.setStatus(ReservationStatus.ACTIVE);
+        reservation.setReservationDate(LocalDate.now()); // [cite: 190]
+        reservation.setDueDate(LocalDate.now().plusDays(request.getDays())); // [cite: 190]
+        reservation.setStatus(ReservationStatus.ACTIVE); // [cite: 190]
 
+        // 4. Update book status [cite: 139, 188]
         book.setStatus(BookStatus.RESERVED);
         bookRepository.save(book);
-        Reservation savedReservation = reservationRepository.save(reservation);
 
-        return mapToResponse(savedReservation);
+        return mapToResponse(reservationRepository.save(reservation));
     }
 
     /**
