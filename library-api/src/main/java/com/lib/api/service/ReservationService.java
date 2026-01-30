@@ -23,9 +23,6 @@ public class ReservationService {
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
 
-    /**
-     * Librarian Task: View all reservations in the system.
-     */
     public List<ReservationResponse> getAllReservations() {
         return reservationRepository.findAll()
                 .stream()
@@ -33,10 +30,13 @@ public class ReservationService {
                 .toList();
     }
 
-    /**
-     * User Task: View only their own reservation history.
-     * Filtered by email extracted from the Security Principal.
-     */
+    // UPDATED: Cleaned up logic
+    public ReservationResponse getReservationById(Integer id) {
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Reservation not found"));
+        return mapToResponse(reservation);
+    }
+
     public List<ReservationResponse> getMyReservations(String email) {
         return reservationRepository.findAll()
                 .stream()
@@ -45,15 +45,11 @@ public class ReservationService {
                 .toList();
     }
 
-    /**
-     * Librarian Task: Remove a record from the database.
-     */
     @Transactional
     public void deleteReservation(Integer id) {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Reservation not found"));
 
-        // If deleting an ACTIVE reservation, we must make the book AVAILABLE again
         if (reservation.getStatus() == ReservationStatus.ACTIVE) {
             Book book = reservation.getBook();
             book.setStatus(BookStatus.AVAILABLE);
@@ -63,16 +59,11 @@ public class ReservationService {
         reservationRepository.delete(reservation);
     }
 
-    /**
-     * User Task: Create a new reservation.
-     */
     @Transactional
     public ReservationResponse createReservation(ReservationRequest request, String currentUserEmail) {
-        // 1. Find the book [cite: 188]
         Book book = bookRepository.findById(request.getBookId())
                 .orElseThrow(() -> new RuntimeException("Book not found"));
 
-        // 2. Find the user safely by the email from the Token [cite: 183, 127]
         User user = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -80,24 +71,19 @@ public class ReservationService {
             throw new RuntimeException("Book is already reserved");
         }
 
-        // 3. Create reservation logic [cite: 190]
         Reservation reservation = new Reservation();
         reservation.setBook(book);
         reservation.setUser(user);
-        reservation.setReservationDate(LocalDate.now()); // [cite: 190]
-        reservation.setDueDate(LocalDate.now().plusDays(request.getDays())); // [cite: 190]
-        reservation.setStatus(ReservationStatus.ACTIVE); // [cite: 190]
+        reservation.setReservationDate(LocalDate.now());
+        reservation.setDueDate(LocalDate.now().plusDays(request.getDays()));
+        reservation.setStatus(ReservationStatus.ACTIVE);
 
-        // 4. Update book status [cite: 139, 188]
         book.setStatus(BookStatus.RESERVED);
         bookRepository.save(book);
 
         return mapToResponse(reservationRepository.save(reservation));
     }
 
-    /**
-     * User Task: Return a reserved book.
-     */
     @Transactional
     public ReservationResponse returnBook(Integer reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
@@ -118,9 +104,6 @@ public class ReservationService {
         return mapToResponse(saved);
     }
 
-    /**
-     * Helper Method: Converts Entity to Safe DTO.
-     */
     private ReservationResponse mapToResponse(Reservation reservation) {
         UserResponse userResp = new UserResponse();
         userResp.setId(reservation.getUser().getId());
